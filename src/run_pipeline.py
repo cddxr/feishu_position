@@ -327,8 +327,11 @@ def upsert_to_supabase(rows: List[Dict]) -> None:
 
     supabase_url = os.environ["SUPABASE_URL"].rstrip("/")
     supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-    table = os.getenv("SUPABASE_TABLE", "amazon_keyword_rank")
-    on_conflict = os.getenv("SUPABASE_ON_CONFLICT", "asin,keyword,zipcode,captured_date")
+    table = os.getenv("SUPABASE_TABLE", "amazon_keyword_rank").strip()
+    on_conflict = os.getenv(
+        "SUPABASE_ON_CONFLICT",
+        "captured_date,account_name,asin,keyword,zipcode",
+    ).strip()
 
     endpoint = f"{supabase_url}/rest/v1/{table}?on_conflict={quote_plus(on_conflict)}"
 
@@ -340,6 +343,8 @@ def upsert_to_supabase(rows: List[Dict]) -> None:
     }
 
     resp = requests.post(endpoint, headers=headers, data=json.dumps(rows), timeout=30)
+    if not resp.ok:
+        print(f"Supabase upsert failed: status={resp.status_code}, body={resp.text[:500]}")
     resp.raise_for_status()
     print(f"Supabase upsert ok, rows={len(rows)}")
 
