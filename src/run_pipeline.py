@@ -12,8 +12,14 @@ from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+
+
+MAX_PAGES = 5
+WAIT_TIME = 10
+RESULTS_PER_PAGE = 48
 
 
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
@@ -150,52 +156,140 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     )
-    return webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(options=options)
+    driver.set_page_load_timeout(30)
+    return driver
 
 
-def find_asin_rank_on_first_page(driver: webdriver.Chrome, keyword: str, asin: str) -> Optional[int]:
-    url = f"https://www.amazon.com/s?k={quote_plus(keyword)}"
-    driver.get(url)
-
+def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) -> None:
     try:
-        WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot"))
+        location_btn = wait.until(
+            EC.element_to_be_clickable((By.ID, "nav-global-location-popover-link"))
         )
-    except TimeoutException:
-        return None
+        location_btn.click()
+        time.sleep(2)
 
-    items = driver.find_elements(By.CSS_SELECTOR, "div.s-main-slot div[data-component-type='s-search-result']")
-    for idx, item in enumerate(items, start=1):
-        if item.get_attribute("data-asin") == asin:
-            return idx
-    return None
+        zip_input = wait.until(
+            EC.presence_of_element_located((By.ID, "GLUXZipUpdateInput"))
+        )
+        zip_input.clear()
+        zip_input.send_keys(zipcode)
+
+        apply_btn = driver.find_element(
+            By.XPATH, '//input[@aria-labelledby="GLUXZipUpdate-announce"]'
+        )
+        apply_btn.click()
+        time.sleep(3)
+
+        done_btn = driver.find_elements(By.NAME, "glowDoneButton")
+        if done_btn:
+            done_btn[0].click()
+        time.sleep(2)
+    except Exception as exc:
+        print(f"Zipcode switch failed for {zipcode}: {exc}")
+
+
+def find_asin_rank(
+    driver: webdriver.Chrome,
+    wait: WebDriverWait,
+    keyword: str,
+    asin: str,
+    max_pages: int = MAX_PAGES,
+    results_per_page: int = RESULTS_PER_PAGE,
+) -> Dict[str, Optional[int]]:
+    driver.get("https://www.amazon.com")
+    search_box = wait.until(EC.presence_of_element_located((By.ID, "twotabsearchtextbox")))
+    search_box.clear()
+    search_box.send_keys(keyword)
+    search_box.send_keys(Keys.ENTER)
+    time.sleep(2)
+
+    page = 1
+    while page <= max_pages:
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot")))
+        except TimeoutException:
+            break
+
+        items = driver.find_elements(By.XPATH, '//div[@data-component-type="s-search-result"]')
+        rank_page = 0
+
+        for item in items:
+            item_asin = item.get_attribute("data-asin")
+            if not item_asin:
+                continue
+
+            is_sponsored = item.find_elements(
+                By.XPATH,
+                './/span[contains(translate(text(),"SPONSORED","sponsored"),"sponsored")]',
+            )
+            item_type = "ad" if is_sponsored else "organic"
+
+            current_rank_page: Optional[int] = None
+            current_rank_total: Optional[int] = None
+            if item_type == "organic":
+                rank_page += 1
+                current_rank_page = rank_page
+                current_rank_total = (page - 1) * results_per_page + rank_page
+
+            if item_asin == asin:
+                return {
+                    "page": page,
+                    "rank": current_rank_page,
+                    "position": current_rank_total,
+                    "type": item_type,
+                }
+
+        next_btn = driver.find_elements(By.CSS_SELECTOR, "a.s-pagination-next")
+        if not next_btn:
+            break
+
+        next_class = next_btn[0].get_attribute("class") or ""
+        if "s-pagination-disabled" in next_class:
+            break
+
+        next_btn[0].click()
+        page += 1
+        time.sleep(2)
+
+    return {
+        "page": None,
+        "rank": None,
+        "position": None,
+        "type": "N/A",
+    }
 
 
 def collect_records(timezone_name: str) -> List[Dict]:
-    now = datetime.now(pytz.timezone(timezone_name))
-    captured_at = now.isoformat()
-    captured_date = now.strftime("%Y-%m-%d")
-
     rows: List[Dict] = []
     driver = build_driver(headless=True)
+    wait = WebDriverWait(driver, WAIT_TIME)
     try:
+        driver.get("https://www.amazon.com")
+        time.sleep(2)
+
         for asin, meta in ASIN_KEYWORDS_MAP.items():
             account_name = meta.get("name", "default")
             zipcodes = meta.get("zipcodes", [])
             keywords = [x["keyword"] for x in meta.get("keywords", []) if x.get("keyword")]
 
             for zipcode in zipcodes:
+                change_zipcode(driver, wait, zipcode)
                 for keyword in keywords:
-                    rank = find_asin_rank_on_first_page(driver, keyword, asin)
+                    rank_result = find_asin_rank(driver, wait, keyword, asin)
+                    now = datetime.now(pytz.timezone(timezone_name))
                     rows.append(
                         {
                             "asin": asin,
                             "account_name": account_name,
                             "zipcode": zipcode,
                             "keyword": keyword,
-                            "rank": rank,
-                            "captured_at": captured_at,
-                            "captured_date": captured_date,
+                            "page": rank_result["page"],
+                            "rank": rank_result["rank"],
+                            "position": rank_result["position"],
+                            "type": rank_result["type"],
+                            "captured_at": now.isoformat(),
+                            "captured_date": now.strftime("%Y-%m-%d"),
                         }
                     )
                     time.sleep(1)
