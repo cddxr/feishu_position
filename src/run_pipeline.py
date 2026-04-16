@@ -26,7 +26,7 @@ KEYWORD_REOPEN_RETRIES = 2
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     "B0F8HXNY5N": {
         "name": "default",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "ryze mushroom hot cocoa"},
             {"keyword": "moonbrew"},
@@ -36,7 +36,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0G64PSMX4": {
         "name": "default",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "javy protein coffee powder"},
             {"keyword": "protein coffee"},
@@ -47,7 +47,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0FN3RJ53V": {
         "name": "y",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "magnesium cream"},
             {"keyword": "magnesium lotion"},
@@ -63,7 +63,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0F1Y8YV9R": {
         "name": "y",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "mullein drops for lungs"},
             {"keyword": "mullein"},
@@ -73,7 +73,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DJVWJHHJ": {
         "name": "hwy",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "cat dental care"},
             {"keyword": "cat teeth cleaning"},
@@ -83,7 +83,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DDCJFFBM": {
         "name": "tx",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "ryze mushroom coffee"},
             {"keyword": "mushroom coffee"},
@@ -91,7 +91,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DFBMVX7T": {
         "name": "tx",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "mushroom coffee for weight loss"},
             {"keyword": "ryze mushroom coffee for weight loss"},
@@ -99,7 +99,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "BODWSDC52L": {
         "name": "tx",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "face moisturizer"},
             {"keyword": "retinol serum for face"},
