@@ -20,6 +20,7 @@ MAX_PAGES = 5
 WAIT_TIME = 10
 RESULTS_PER_PAGE = 48
 SEARCH_RETRIES = 3
+KEYWORD_REOPEN_RETRIES = 2
 
 
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
@@ -276,6 +277,19 @@ def collect_records(timezone_name: str) -> List[Dict]:
     rows: List[Dict] = []
     driver = build_driver(headless=True)
     wait = WebDriverWait(driver, WAIT_TIME)
+
+    def reopen_session(current_zipcode: str) -> None:
+        nonlocal driver, wait
+        try:
+            driver.quit()
+        except Exception:
+            pass
+        driver = build_driver(headless=True)
+        wait = WebDriverWait(driver, WAIT_TIME)
+        driver.get("https://www.amazon.com")
+        time.sleep(2)
+        change_zipcode(driver, wait, current_zipcode)
+
     try:
         driver.get("https://www.amazon.com")
         time.sleep(2)
@@ -288,16 +302,38 @@ def collect_records(timezone_name: str) -> List[Dict]:
             for zipcode in zipcodes:
                 change_zipcode(driver, wait, zipcode)
                 for keyword in keywords:
-                    try:
-                        rank_result = find_asin_rank(driver, wait, keyword, asin)
-                    except Exception as exc:
-                        print(f"find_asin_rank failed asin={asin} keyword={keyword}: {exc}")
-                        rank_result = {
-                            "page": None,
-                            "rank": None,
-                            "position": None,
-                            "type": "执行失败",
-                        }
+                    rank_result = {
+                        "page": None,
+                        "rank": None,
+                        "position": None,
+                        "type": "执行失败",
+                    }
+
+                    for attempt in range(KEYWORD_REOPEN_RETRIES + 1):
+                        try:
+                            rank_result = find_asin_rank(driver, wait, keyword, asin)
+                        except Exception as exc:
+                            print(
+                                f"find_asin_rank exception asin={asin} keyword={keyword} "
+                                f"attempt={attempt + 1}: {exc}"
+                            )
+                            rank_result = {
+                                "page": None,
+                                "rank": None,
+                                "position": None,
+                                "type": "执行失败",
+                            }
+
+                        if rank_result.get("type") != "执行失败":
+                            break
+
+                        if attempt < KEYWORD_REOPEN_RETRIES:
+                            print(
+                                f"Retry with reopen asin={asin} keyword={keyword} "
+                                f"zipcode={zipcode} attempt={attempt + 2}"
+                            )
+                            reopen_session(zipcode)
+
                     now = datetime.now(pytz.timezone(timezone_name))
                     rows.append(
                         {
