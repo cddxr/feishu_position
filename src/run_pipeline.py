@@ -9,10 +9,9 @@ import pytz
 import requests
 from dotenv import load_dotenv
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -197,12 +196,24 @@ def find_asin_rank(
     max_pages: int = MAX_PAGES,
     results_per_page: int = RESULTS_PER_PAGE,
 ) -> Dict[str, Optional[int]]:
-    driver.get("https://www.amazon.com")
-    search_box = wait.until(EC.presence_of_element_located((By.ID, "twotabsearchtextbox")))
-    search_box.clear()
-    search_box.send_keys(keyword)
-    search_box.send_keys(Keys.ENTER)
-    time.sleep(2)
+    query_url = f"https://www.amazon.com/s?k={quote_plus(keyword)}"
+    loaded = False
+    for _ in range(3):
+        try:
+            driver.get(query_url)
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot")))
+            loaded = True
+            break
+        except (TimeoutException, WebDriverException):
+            time.sleep(2)
+
+    if not loaded:
+        return {
+            "page": None,
+            "rank": None,
+            "position": None,
+            "type": "N/A",
+        }
 
     page = 1
     while page <= max_pages:
@@ -276,7 +287,16 @@ def collect_records(timezone_name: str) -> List[Dict]:
             for zipcode in zipcodes:
                 change_zipcode(driver, wait, zipcode)
                 for keyword in keywords:
-                    rank_result = find_asin_rank(driver, wait, keyword, asin)
+                    try:
+                        rank_result = find_asin_rank(driver, wait, keyword, asin)
+                    except Exception as exc:
+                        print(f"find_asin_rank failed asin={asin} keyword={keyword}: {exc}")
+                        rank_result = {
+                            "page": None,
+                            "rank": None,
+                            "position": None,
+                            "type": "N/A",
+                        }
                     now = datetime.now(pytz.timezone(timezone_name))
                     rows.append(
                         {
