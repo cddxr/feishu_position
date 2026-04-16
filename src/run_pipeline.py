@@ -19,6 +19,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 MAX_PAGES = 5
 WAIT_TIME = 10
 RESULTS_PER_PAGE = 48
+SEARCH_RETRIES = 3
 
 
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
@@ -198,7 +199,7 @@ def find_asin_rank(
 ) -> Dict[str, Optional[int]]:
     query_url = f"https://www.amazon.com/s?k={quote_plus(keyword)}"
     loaded = False
-    for _ in range(3):
+    for _ in range(SEARCH_RETRIES):
         try:
             driver.get(query_url)
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot")))
@@ -212,7 +213,7 @@ def find_asin_rank(
             "page": None,
             "rank": None,
             "position": None,
-            "type": "N/A",
+            "type": "执行失败",
         }
 
     page = 1
@@ -295,7 +296,7 @@ def collect_records(timezone_name: str) -> List[Dict]:
                             "page": None,
                             "rank": None,
                             "position": None,
-                            "type": "N/A",
+                            "type": "执行失败",
                         }
                     now = datetime.now(pytz.timezone(timezone_name))
                     rows.append(
