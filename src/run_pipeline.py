@@ -16,7 +16,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-# Keep only a small sample here. Replace with your full map.
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     "B0F8HXNY5N": {
         "name": "default",
@@ -35,6 +34,105 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "javy protein coffee powder"},
             {"keyword": "protein coffee"},
             {"keyword": "chike high protein coffee"},
+            {"keyword": "javvy"},
+            {"keyword": "chike"},
+        ],
+    },
+    "B0FN3RJ53V": {
+        "name": "y",
+        "zipcodes": ["90001", "75001", "32001"],
+        "keywords": [
+            {"keyword": "magnesium cream"},
+            {"keyword": "magnesium lotion"},
+            {"keyword": "magnesium cream for sleep"},
+            {"keyword": "magnesium lotion for sleep"},
+            {"keyword": "magnesium lotion for kids"},
+            {"keyword": "magnesium oil"},
+            {"keyword": "magnesium butter"},
+            {"keyword": "arnica cream"},
+            {"keyword": "restless legs syndrome relief"},
+            {"keyword": "Total Relief Magnesium Cream"},
+        ],
+    },
+    "B0F1Y8YV9R": {
+        "name": "y",
+        "zipcodes": ["90001", "75001", "32001"],
+        "keywords": [
+            {"keyword": "mullein drops for lungs"},
+            {"keyword": "mullein"},
+            {"keyword": "mullein leaf extract for lungs"},
+            {"keyword": "lung detox for smokers"},
+        ],
+    },
+    "B0DJVWJHHJ": {
+        "name": "hwy",
+        "zipcodes": ["90001", "75001", "32001"],
+        "keywords": [
+            {"keyword": "cat dental care"},
+            {"keyword": "cat teeth cleaning"},
+            {"keyword": "dog dental wipes"},
+            {"keyword": "dog teeth cleaning wipes"},
+        ],
+    },
+    "B0DDCJFFBM": {
+        "name": "tx",
+        "zipcodes": ["90001", "75001", "32001"],
+        "keywords": [
+            {"keyword": "ryze mushroom coffee"},
+            {"keyword": "mushroom coffee"},
+        ],
+    },
+    "B0DFBMVX7T": {
+        "name": "tx",
+        "zipcodes": ["90001", "75001", "32001"],
+        "keywords": [
+            {"keyword": "mushroom coffee for weight loss"},
+            {"keyword": "ryze mushroom coffee for weight loss"},
+        ],
+    },
+    "BODWSDC52L": {
+        "name": "tx",
+        "zipcodes": ["90001", "75001", "32001"],
+        "keywords": [
+            {"keyword": "face moisturizer"},
+            {"keyword": "retinol serum for face"},
+            {"keyword": "retinol cream"},
+            {"keyword": "anti aging face cream"},
+            {"keyword": "wrinkle cream for women"},
+        ],
+    },
+    "B0DN6T1QGD": {
+        "name": "lyj",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "lmnt electrolytes"},
+            {"keyword": "lmnt"},
+            {"keyword": "relyte electrolyte mix"},
+            {"keyword": "electrolytes"},
+            {"keyword": "electrolytes powder packets"},
+        ],
+    },
+    "B0DGPZ81BC": {
+        "name": "lyj",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "hydration packets"},
+            {"keyword": "liquid iv"},
+            {"keyword": "liquid iv sugar free"},
+            {"keyword": "waterboy"},
+            {"keyword": "waterboy hydration packets"},
+            {"keyword": "electrolytes powder packets"},
+        ],
+    },
+    "B0FKN8PWNJ": {
+        "name": "lyj",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "liquid iv"},
+            {"keyword": "liquid iv sugar free"},
+            {"keyword": "electrolytes powder packets"},
+            {"keyword": "hydration packets"},
+            {"keyword": "sugar free liquid iv"},
         ],
     },
 }
