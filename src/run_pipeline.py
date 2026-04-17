@@ -163,75 +163,100 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
 
 
 def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) -> None:
-    def safe_click(locator, use_js_fallback: bool = True):
-        el = wait.until(EC.element_to_be_clickable(locator))
-        try:
-            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
-            time.sleep(0.5)
-            el.click()
-        except Exception:
-            if not use_js_fallback:
-                raise
-            el = wait.until(EC.presence_of_element_located(locator))
-            driver.execute_script("arguments[0].click();", el)
-        return el
+    def wait_page_ready(timeout: int = 20):
+        WebDriverWait(driver, timeout).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
+        )
+
+    def safe_click_any(locators, timeout: int = WAIT_TIME):
+        last_exc = None
+        for locator in locators:
+            try:
+                el = WebDriverWait(driver, timeout).until(
+                    EC.presence_of_element_located(locator)
+                )
+                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+                time.sleep(0.5)
+                WebDriverWait(driver, timeout).until(
+                    lambda d: el.is_displayed() and el.is_enabled()
+                )
+                try:
+                    el.click()
+                except Exception:
+                    driver.execute_script("arguments[0].click();", el)
+                return el
+            except Exception as exc:
+                last_exc = exc
+                continue
+        raise last_exc if last_exc else Exception("No clickable element found")
 
     try:
-        # 先回首页，避免在搜索页/其他页弹窗异常
-        if "amazon.com" not in driver.current_url:
-            driver.get("https://www.amazon.com")
-            time.sleep(2)
+        # 1) 强制回首页，避免停留在搜索页/异常页
+        driver.get("https://www.amazon.com/?ref_=nav_logo")
+        wait_page_ready()
+        time.sleep(2)
 
-        # 1. 点击地址按钮
-        safe_click((By.ID, "nav-global-location-popover-link"))
-        time.sleep(1.5)
+        # 2) 先处理可能的 cookie / continue 弹窗（有则点，没有就跳过）
+        optional_buttons = [
+            (By.ID, "sp-cc-accept"),
+            (By.NAME, "accept"),
+            (By.XPATH, '//input[contains(@aria-label, "Accept")]'),
+            (By.XPATH, '//button[contains(., "Continue shopping")]'),
+        ]
+        for locator in optional_buttons:
+            try:
+                els = driver.find_elements(*locator)
+                if els:
+                    try:
+                        els[0].click()
+                    except Exception:
+                        driver.execute_script("arguments[0].click();", els[0])
+                    time.sleep(1)
+                    break
+            except Exception:
+                pass
 
-        # 2. 等待邮编输入框真正出现
-        zip_input = wait.until(
+        # 3) 地址按钮多定位兜底，不只用一个 ID
+        location_locators = [
+            (By.ID, "nav-global-location-popover-link"),
+            (By.ID, "glow-ingress-block"),
+            (By.XPATH, '//a[@id="nav-global-location-popover-link"]'),
+            (By.XPATH, '//div[@id="glow-ingress-block"]'),
+            (By.XPATH, '//span[@id="glow-ingress-line1"]/ancestor::*[@id="nav-global-location-popover-link" or @id="glow-ingress-block"]'),
+        ]
+        safe_click_any(location_locators, timeout=15)
+        time.sleep(2)
+
+        # 4) 等邮编输入框出现
+        zip_input = WebDriverWait(driver, 15).until(
             EC.visibility_of_element_located((By.ID, "GLUXZipUpdateInput"))
         )
 
-        # 3. 清空并输入邮编
         try:
             zip_input.clear()
-            time.sleep(0.3)
         except Exception:
             pass
-
         driver.execute_script("arguments[0].value = '';", zip_input)
         zip_input.send_keys(zipcode)
         time.sleep(0.5)
 
-        # 4. 点 Apply / 更新
-        apply_clicked = False
+        # 5) Apply 按钮多定位
         apply_locators = [
             (By.XPATH, '//input[@aria-labelledby="GLUXZipUpdate-announce"]'),
-            (By.XPATH, '//input[contains(@id,"GLUXZipUpdate") and (@type="submit" or @type="button")]'),
             (By.XPATH, '//span[@id="GLUXZipUpdate"]//input'),
+            (By.XPATH, '//input[contains(@id,"GLUXZipUpdate")]'),
         ]
+        safe_click_any(apply_locators, timeout=10)
+        time.sleep(3)
 
-        for locator in apply_locators:
-            try:
-                safe_click(locator)
-                apply_clicked = True
-                break
-            except Exception:
-                continue
-
-        if not apply_clicked:
-            raise Exception("Apply button not clickable")
-
-        time.sleep(2.5)
-
-        # 5. 某些场景会多一个 Continue / Confirm
-        optional_confirm_locators = [
+        # 6) Done / Continue / Confirm 按钮兜底
+        done_locators = [
             (By.NAME, "glowDoneButton"),
             (By.XPATH, '//input[@name="glowDoneButton"]'),
             (By.XPATH, '//span[@id="GLUXConfirmClose"]//input'),
             (By.XPATH, '//input[contains(@aria-labelledby,"GLUXConfirmClose")]'),
         ]
-
-        for locator in optional_confirm_locators:
+        for locator in done_locators:
             try:
                 els = driver.find_elements(*locator)
                 if els:
@@ -241,15 +266,12 @@ def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) 
                         els[0].click()
                     except Exception:
                         driver.execute_script("arguments[0].click();", els[0])
-                    time.sleep(1.5)
+                    time.sleep(2)
                     break
             except Exception:
                 pass
 
-        # 6. 等页面稳定一下
-        time.sleep(2)
-
-        # 7. 简单校验一下地址区域是否已更新
+        # 7) 校验是否切换成功
         nav_text = ""
         try:
             nav_addr = driver.find_element(By.ID, "glow-ingress-line2")
@@ -258,17 +280,14 @@ def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) 
             pass
 
         if zipcode not in nav_text:
-            page_text = (driver.page_source or "")[:300000]
-            if zipcode not in page_text:
-                raise Exception(f"zipcode not applied: {zipcode}, nav_text={nav_text}")
+            raise Exception(f"zipcode not applied: {zipcode}, nav_text={nav_text}")
 
         print(f"Zipcode switched to {zipcode} successfully")
 
     except Exception as exc:
         print(f"Zipcode switch failed for {zipcode}: {exc}")
         raise
-
-
+        
 def find_asin_rank(
     driver: webdriver.Chrome,
     wait: WebDriverWait,
