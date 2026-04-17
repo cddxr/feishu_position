@@ -24,27 +24,27 @@ KEYWORD_REOPEN_RETRIES = 2
 
 
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
-    "B0F8HXNY5N": {
-        "name": "default",
-        "zipcodes": ["90001", "75001"],
-        "keywords": [
-            {"keyword": "ryze mushroom hot cocoa"},
-            {"keyword": "moonbrew"},
-            {"keyword": "moon brew"},
-            {"keyword": "sleep aid"},
-        ],
-    },
-    "B0G64PSMX4": {
-        "name": "default",
-        "zipcodes": ["90001", "75001"],
-        "keywords": [
-            {"keyword": "javy protein coffee powder"},
-            {"keyword": "protein coffee"},
-            {"keyword": "chike high protein coffee"},
-            {"keyword": "javvy"},
-            {"keyword": "chike"},
-        ],
-    },
+    # "B0F8HXNY5N": {
+    #     "name": "default",
+    #     "zipcodes": ["90001", "75001"],
+    #     "keywords": [
+    #         {"keyword": "ryze mushroom hot cocoa"},
+    #         {"keyword": "moonbrew"},
+    #         {"keyword": "moon brew"},
+    #         {"keyword": "sleep aid"},
+    #     ],
+    # },
+    # "B0G64PSMX4": {
+    #     "name": "default",
+    #     "zipcodes": ["90001", "75001"],
+    #     "keywords": [
+    #         {"keyword": "javy protein coffee powder"},
+    #         {"keyword": "protein coffee"},
+    #         {"keyword": "chike high protein coffee"},
+    #         {"keyword": "javvy"},
+    #         {"keyword": "chike"},
+    #     ],
+    # },
     "B0FN3RJ53V": {
         "name": "y",
         "zipcodes": ["90001", "75001"],
@@ -71,77 +71,77 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "lung detox for smokers"},
         ],
     },
-    "B0DJVWJHHJ": {
-        "name": "hwy",
-        "zipcodes": ["90001", "75001"],
-        "keywords": [
-            {"keyword": "cat dental care"},
-            {"keyword": "cat teeth cleaning"},
-            {"keyword": "dog dental wipes"},
-            {"keyword": "dog teeth cleaning wipes"},
-        ],
-    },
-    "B0DDCJFFBM": {
-        "name": "tx",
-        "zipcodes": ["90001", "75001"],
-        "keywords": [
-            {"keyword": "ryze mushroom coffee"},
-            {"keyword": "mushroom coffee"},
-        ],
-    },
-    "B0DFBMVX7T": {
-        "name": "tx",
-        "zipcodes": ["90001", "75001"],
-        "keywords": [
-            {"keyword": "mushroom coffee for weight loss"},
-            {"keyword": "ryze mushroom coffee for weight loss"},
-        ],
-    },
-    "BODWSDC52L": {
-        "name": "tx",
-        "zipcodes": ["90001", "75001"],
-        "keywords": [
-            {"keyword": "face moisturizer"},
-            {"keyword": "retinol serum for face"},
-            {"keyword": "retinol cream"},
-            {"keyword": "anti aging face cream"},
-            {"keyword": "wrinkle cream for women"},
-        ],
-    },
-    "B0DN6T1QGD": {
-        "name": "lyj",
-        "zipcodes": ["90015"],
-        "keywords": [
-            {"keyword": "lmnt electrolytes"},
-            {"keyword": "lmnt"},
-            {"keyword": "relyte electrolyte mix"},
-            {"keyword": "electrolytes"},
-            {"keyword": "electrolytes powder packets"},
-        ],
-    },
-    "B0DGPZ81BC": {
-        "name": "lyj",
-        "zipcodes": ["90015"],
-        "keywords": [
-            {"keyword": "hydration packets"},
-            {"keyword": "liquid iv"},
-            {"keyword": "liquid iv sugar free"},
-            {"keyword": "waterboy"},
-            {"keyword": "waterboy hydration packets"},
-            {"keyword": "electrolytes powder packets"},
-        ],
-    },
-    "B0FKN8PWNJ": {
-        "name": "lyj",
-        "zipcodes": ["90015"],
-        "keywords": [
-            {"keyword": "liquid iv"},
-            {"keyword": "liquid iv sugar free"},
-            {"keyword": "electrolytes powder packets"},
-            {"keyword": "hydration packets"},
-            {"keyword": "sugar free liquid iv"},
-        ],
-    },
+    # "B0DJVWJHHJ": {
+    #     "name": "hwy",
+    #     "zipcodes": ["90001", "75001"],
+    #     "keywords": [
+    #         {"keyword": "cat dental care"},
+    #         {"keyword": "cat teeth cleaning"},
+    #         {"keyword": "dog dental wipes"},
+    #         {"keyword": "dog teeth cleaning wipes"},
+    #     ],
+    # },
+    # "B0DDCJFFBM": {
+    #     "name": "tx",
+    #     "zipcodes": ["90001", "75001"],
+    #     "keywords": [
+    #         {"keyword": "ryze mushroom coffee"},
+    #         {"keyword": "mushroom coffee"},
+    #     ],
+    # },
+    # "B0DFBMVX7T": {
+    #     "name": "tx",
+    #     "zipcodes": ["90001", "75001"],
+    #     "keywords": [
+    #         {"keyword": "mushroom coffee for weight loss"},
+    #         {"keyword": "ryze mushroom coffee for weight loss"},
+    #     ],
+    # },
+    # "BODWSDC52L": {
+    #     "name": "tx",
+    #     "zipcodes": ["90001", "75001"],
+    #     "keywords": [
+    #         {"keyword": "face moisturizer"},
+    #         {"keyword": "retinol serum for face"},
+    #         {"keyword": "retinol cream"},
+    #         {"keyword": "anti aging face cream"},
+    #         {"keyword": "wrinkle cream for women"},
+    #     ],
+    # },
+    # "B0DN6T1QGD": {
+    #     "name": "lyj",
+    #     "zipcodes": ["90015"],
+    #     "keywords": [
+    #         {"keyword": "lmnt electrolytes"},
+    #         {"keyword": "lmnt"},
+    #         {"keyword": "relyte electrolyte mix"},
+    #         {"keyword": "electrolytes"},
+    #         {"keyword": "electrolytes powder packets"},
+    #     ],
+    # },
+    # "B0DGPZ81BC": {
+    #     "name": "lyj",
+    #     "zipcodes": ["90015"],
+    #     "keywords": [
+    #         {"keyword": "hydration packets"},
+    #         {"keyword": "liquid iv"},
+    #         {"keyword": "liquid iv sugar free"},
+    #         {"keyword": "waterboy"},
+    #         {"keyword": "waterboy hydration packets"},
+    #         {"keyword": "electrolytes powder packets"},
+    #     ],
+    # },
+    # "B0FKN8PWNJ": {
+    #     "name": "lyj",
+    #     "zipcodes": ["90015"],
+    #     "keywords": [
+    #         {"keyword": "liquid iv"},
+    #         {"keyword": "liquid iv sugar free"},
+    #         {"keyword": "electrolytes powder packets"},
+    #         {"keyword": "hydration packets"},
+    #         {"keyword": "sugar free liquid iv"},
+    #     ],
+    # },
 }
 
 
