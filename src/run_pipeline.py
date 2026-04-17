@@ -163,31 +163,110 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
 
 
 def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) -> None:
+    def safe_click(locator, use_js_fallback: bool = True):
+        el = wait.until(EC.element_to_be_clickable(locator))
+        try:
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+            time.sleep(0.5)
+            el.click()
+        except Exception:
+            if not use_js_fallback:
+                raise
+            el = wait.until(EC.presence_of_element_located(locator))
+            driver.execute_script("arguments[0].click();", el)
+        return el
+
     try:
-        location_btn = wait.until(
-            EC.element_to_be_clickable((By.ID, "nav-global-location-popover-link"))
-        )
-        location_btn.click()
-        time.sleep(2)
+        # 先回首页，避免在搜索页/其他页弹窗异常
+        if "amazon.com" not in driver.current_url:
+            driver.get("https://www.amazon.com")
+            time.sleep(2)
 
+        # 1. 点击地址按钮
+        safe_click((By.ID, "nav-global-location-popover-link"))
+        time.sleep(1.5)
+
+        # 2. 等待邮编输入框真正出现
         zip_input = wait.until(
-            EC.presence_of_element_located((By.ID, "GLUXZipUpdateInput"))
+            EC.visibility_of_element_located((By.ID, "GLUXZipUpdateInput"))
         )
-        zip_input.clear()
+
+        # 3. 清空并输入邮编
+        try:
+            zip_input.clear()
+            time.sleep(0.3)
+        except Exception:
+            pass
+
+        driver.execute_script("arguments[0].value = '';", zip_input)
         zip_input.send_keys(zipcode)
+        time.sleep(0.5)
 
-        apply_btn = driver.find_element(
-            By.XPATH, '//input[@aria-labelledby="GLUXZipUpdate-announce"]'
-        )
-        apply_btn.click()
-        time.sleep(3)
+        # 4. 点 Apply / 更新
+        apply_clicked = False
+        apply_locators = [
+            (By.XPATH, '//input[@aria-labelledby="GLUXZipUpdate-announce"]'),
+            (By.XPATH, '//input[contains(@id,"GLUXZipUpdate") and (@type="submit" or @type="button")]'),
+            (By.XPATH, '//span[@id="GLUXZipUpdate"]//input'),
+        ]
 
-        done_btn = driver.find_elements(By.NAME, "glowDoneButton")
-        if done_btn:
-            done_btn[0].click()
+        for locator in apply_locators:
+            try:
+                safe_click(locator)
+                apply_clicked = True
+                break
+            except Exception:
+                continue
+
+        if not apply_clicked:
+            raise Exception("Apply button not clickable")
+
+        time.sleep(2.5)
+
+        # 5. 某些场景会多一个 Continue / Confirm
+        optional_confirm_locators = [
+            (By.NAME, "glowDoneButton"),
+            (By.XPATH, '//input[@name="glowDoneButton"]'),
+            (By.XPATH, '//span[@id="GLUXConfirmClose"]//input'),
+            (By.XPATH, '//input[contains(@aria-labelledby,"GLUXConfirmClose")]'),
+        ]
+
+        for locator in optional_confirm_locators:
+            try:
+                els = driver.find_elements(*locator)
+                if els:
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView({block:'center'});", els[0])
+                        time.sleep(0.3)
+                        els[0].click()
+                    except Exception:
+                        driver.execute_script("arguments[0].click();", els[0])
+                    time.sleep(1.5)
+                    break
+            except Exception:
+                pass
+
+        # 6. 等页面稳定一下
         time.sleep(2)
+
+        # 7. 简单校验一下地址区域是否已更新
+        nav_text = ""
+        try:
+            nav_addr = driver.find_element(By.ID, "glow-ingress-line2")
+            nav_text = (nav_addr.text or "").strip()
+        except Exception:
+            pass
+
+        if zipcode not in nav_text:
+            page_text = (driver.page_source or "")[:300000]
+            if zipcode not in page_text:
+                raise Exception(f"zipcode not applied: {zipcode}, nav_text={nav_text}")
+
+        print(f"Zipcode switched to {zipcode} successfully")
+
     except Exception as exc:
         print(f"Zipcode switch failed for {zipcode}: {exc}")
+        raise
 
 
 def find_asin_rank(
