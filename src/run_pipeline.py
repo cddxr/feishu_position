@@ -24,53 +24,53 @@ KEYWORD_REOPEN_RETRIES = 2
 
 
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
-    # "B0F8HXNY5N": {
-    #     "name": "default",
-    #     "zipcodes": ["90001", "75001"],
-    #     "keywords": [
-    #         {"keyword": "ryze mushroom hot cocoa"},
-    #         {"keyword": "moonbrew"},
-    #         {"keyword": "moon brew"},
-    #         {"keyword": "sleep aid"},
-    #     ],
-    # },
-    # "B0G64PSMX4": {
-    #     "name": "default",
-    #     "zipcodes": ["90001", "75001"],
-    #     "keywords": [
-    #         {"keyword": "javy protein coffee powder"},
-    #         {"keyword": "protein coffee"},
-    #         {"keyword": "chike high protein coffee"},
-    #         {"keyword": "javvy"},
-    #         {"keyword": "chike"},
-    #     ],
-    # },
-    # "B0FN3RJ53V": {
-    #     "name": "y",
-    #     "zipcodes": ["90001", "75001"],
-    #     "keywords": [
-    #         {"keyword": "magnesium cream"},
-    #         {"keyword": "magnesium lotion"},
-    #         {"keyword": "magnesium cream for sleep"},
-    #         {"keyword": "magnesium lotion for sleep"},
-    #         {"keyword": "magnesium lotion for kids"},
-    #         {"keyword": "magnesium oil"},
-    #         {"keyword": "magnesium butter"},
-    #         {"keyword": "arnica cream"},
-    #         {"keyword": "restless legs syndrome relief"},
-    #         {"keyword": "Total Relief Magnesium Cream"},
-    #     ],
-    # },
-    # "B0F1Y8YV9R": {
-    #     "name": "y",
-    #     "zipcodes": ["90001", "75001"],
-    #     "keywords": [
-    #         {"keyword": "mullein drops for lungs"},
-    #         {"keyword": "mullein"},
-    #         {"keyword": "mullein leaf extract for lungs"},
-    #         {"keyword": "lung detox for smokers"},
-    #     ],
-    # },
+    "B0F8HXNY5N": {
+        "name": "default",
+        "zipcodes": ["90001", "75001"],
+        "keywords": [
+            {"keyword": "ryze mushroom hot cocoa"},
+            {"keyword": "moonbrew"},
+            {"keyword": "moon brew"},
+            {"keyword": "sleep aid"},
+        ],
+    },
+    "B0G64PSMX4": {
+        "name": "default",
+        "zipcodes": ["90001", "75001"],
+        "keywords": [
+            {"keyword": "javy protein coffee powder"},
+            {"keyword": "protein coffee"},
+            {"keyword": "chike high protein coffee"},
+            {"keyword": "javvy"},
+            {"keyword": "chike"},
+        ],
+    },
+    "B0FN3RJ53V": {
+        "name": "y",
+        "zipcodes": ["90001", "75001"],
+        "keywords": [
+            {"keyword": "magnesium cream"},
+            {"keyword": "magnesium lotion"},
+            {"keyword": "magnesium cream for sleep"},
+            {"keyword": "magnesium lotion for sleep"},
+            {"keyword": "magnesium lotion for kids"},
+            {"keyword": "magnesium oil"},
+            {"keyword": "magnesium butter"},
+            {"keyword": "arnica cream"},
+            {"keyword": "restless legs syndrome relief"},
+            {"keyword": "Total Relief Magnesium Cream"},
+        ],
+    },
+    "B0F1Y8YV9R": {
+        "name": "y",
+        "zipcodes": ["90001", "75001"],
+        "keywords": [
+            {"keyword": "mullein drops for lungs"},
+            {"keyword": "mullein"},
+            {"keyword": "mullein leaf extract for lungs"},
+            {"keyword": "lung detox for smokers"},
+        ],
+    },
         "B0FKN3ZTBJ": {
         "name": "zlq",
         "zipcodes": ["90015"],
