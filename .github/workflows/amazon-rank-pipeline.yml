@@ -3,8 +3,8 @@
 on:
   workflow_dispatch:
   schedule:
-    # UTC time. 01:00 UTC = 09:00 Asia/Shanghai
-    - cron: "0 1 * * *"
+    # UTC time. 22:30 UTC = 06:30 Asia/Shanghai (next day)
+    - cron: "30 22 * * *"
 
 jobs:
   run:
