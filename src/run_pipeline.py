@@ -16,7 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-MAX_PAGES = 5
+MAX_PAGES = 8
 WAIT_TIME = 10
 RESULTS_PER_PAGE = 48
 SEARCH_RETRIES = 3
