@@ -16,7 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-MAX_PAGES = 5
+MAX_PAGES = 8
 WAIT_TIME = 10
 RESULTS_PER_PAGE = 48
 SEARCH_RETRIES = 3
@@ -26,7 +26,7 @@ KEYWORD_REOPEN_RETRIES = 2
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     "B0F8HXNY5N": {
         "name": "default",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "ryze mushroom hot cocoa"},
             {"keyword": "moonbrew"},
@@ -36,7 +36,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0G64PSMX4": {
         "name": "default",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "javy protein coffee powder"},
             {"keyword": "protein coffee"},
@@ -47,7 +47,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0FN3RJ53V": {
         "name": "y",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "magnesium cream"},
             {"keyword": "magnesium lotion"},
@@ -63,7 +63,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0F1Y8YV9R": {
         "name": "y",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "mullein drops for lungs"},
             {"keyword": "mullein"},
@@ -71,9 +71,31 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "lung detox for smokers"},
         ],
     },
+        "B0FKN3ZTBJ": {
+        "name": "zlq",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "electrolytes"},
+            {"keyword": "lmnt electrolytes"},
+            {"keyword": "lmnt"},
+            {"keyword": "electrolytes powder packets"},
+            {"keyword": "lmnt electrolyte powder packets"},
+        ],
+    },
+    "B0FVLNKFJL": {
+        "name": "zlq",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "electrolytes"},
+            {"keyword": "lmnt electrolytes"},
+            {"keyword": "lmnt"},
+            {"keyword": "electrolytes powder packets"},
+            {"keyword": "lmnt electrolyte powder packets"},
+        ],
+    },
     "B0DJVWJHHJ": {
         "name": "hwy",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "cat dental care"},
             {"keyword": "cat teeth cleaning"},
@@ -83,7 +105,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DDCJFFBM": {
         "name": "tx",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "ryze mushroom coffee"},
             {"keyword": "mushroom coffee"},
@@ -91,7 +113,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DFBMVX7T": {
         "name": "tx",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "mushroom coffee for weight loss"},
             {"keyword": "ryze mushroom coffee for weight loss"},
@@ -99,7 +121,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "BODWSDC52L": {
         "name": "tx",
-        "zipcodes": ["90001", "75001", "32001"],
+        "zipcodes": ["90001", "75001"],
         "keywords": [
             {"keyword": "face moisturizer"},
             {"keyword": "retinol serum for face"},
@@ -163,33 +185,131 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
 
 
 def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) -> None:
-    try:
-        location_btn = wait.until(
-            EC.element_to_be_clickable((By.ID, "nav-global-location-popover-link"))
+    def wait_page_ready(timeout: int = 20):
+        WebDriverWait(driver, timeout).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
         )
-        location_btn.click()
+
+    def safe_click_any(locators, timeout: int = WAIT_TIME):
+        last_exc = None
+        for locator in locators:
+            try:
+                el = WebDriverWait(driver, timeout).until(
+                    EC.presence_of_element_located(locator)
+                )
+                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+                time.sleep(0.5)
+                WebDriverWait(driver, timeout).until(
+                    lambda d: el.is_displayed() and el.is_enabled()
+                )
+                try:
+                    el.click()
+                except Exception:
+                    driver.execute_script("arguments[0].click();", el)
+                return el
+            except Exception as exc:
+                last_exc = exc
+                continue
+        raise last_exc if last_exc else Exception("No clickable element found")
+
+    try:
+        # 1) 强制回首页，避免停留在搜索页/异常页
+        driver.get("https://www.amazon.com/?ref_=nav_logo")
+        wait_page_ready()
         time.sleep(2)
 
-        zip_input = wait.until(
-            EC.presence_of_element_located((By.ID, "GLUXZipUpdateInput"))
-        )
-        zip_input.clear()
-        zip_input.send_keys(zipcode)
+        # 2) 先处理可能的 cookie / continue 弹窗（有则点，没有就跳过）
+        optional_buttons = [
+            (By.ID, "sp-cc-accept"),
+            (By.NAME, "accept"),
+            (By.XPATH, '//input[contains(@aria-label, "Accept")]'),
+            (By.XPATH, '//button[contains(., "Continue shopping")]'),
+        ]
+        for locator in optional_buttons:
+            try:
+                els = driver.find_elements(*locator)
+                if els:
+                    try:
+                        els[0].click()
+                    except Exception:
+                        driver.execute_script("arguments[0].click();", els[0])
+                    time.sleep(1)
+                    break
+            except Exception:
+                pass
 
-        apply_btn = driver.find_element(
-            By.XPATH, '//input[@aria-labelledby="GLUXZipUpdate-announce"]'
+        # 3) 地址按钮多定位兜底，不只用一个 ID
+        location_locators = [
+            (By.ID, "nav-global-location-popover-link"),
+            (By.ID, "glow-ingress-block"),
+            (By.XPATH, '//a[@id="nav-global-location-popover-link"]'),
+            (By.XPATH, '//div[@id="glow-ingress-block"]'),
+            (By.XPATH, '//span[@id="glow-ingress-line1"]/ancestor::*[@id="nav-global-location-popover-link" or @id="glow-ingress-block"]'),
+        ]
+        safe_click_any(location_locators, timeout=15)
+        time.sleep(2)
+
+        # 4) 等邮编输入框出现
+        zip_input = WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.ID, "GLUXZipUpdateInput"))
         )
-        apply_btn.click()
+
+        try:
+            zip_input.clear()
+        except Exception:
+            pass
+        driver.execute_script("arguments[0].value = '';", zip_input)
+        zip_input.send_keys(zipcode)
+        time.sleep(0.5)
+
+        # 5) Apply 按钮多定位
+        apply_locators = [
+            (By.XPATH, '//input[@aria-labelledby="GLUXZipUpdate-announce"]'),
+            (By.XPATH, '//span[@id="GLUXZipUpdate"]//input'),
+            (By.XPATH, '//input[contains(@id,"GLUXZipUpdate")]'),
+        ]
+        safe_click_any(apply_locators, timeout=10)
         time.sleep(3)
 
-        done_btn = driver.find_elements(By.NAME, "glowDoneButton")
-        if done_btn:
-            done_btn[0].click()
-        time.sleep(2)
+        # 6) Done / Continue / Confirm 按钮兜底
+        done_locators = [
+            (By.NAME, "glowDoneButton"),
+            (By.XPATH, '//input[@name="glowDoneButton"]'),
+            (By.XPATH, '//span[@id="GLUXConfirmClose"]//input'),
+            (By.XPATH, '//input[contains(@aria-labelledby,"GLUXConfirmClose")]'),
+        ]
+        for locator in done_locators:
+            try:
+                els = driver.find_elements(*locator)
+                if els:
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView({block:'center'});", els[0])
+                        time.sleep(0.3)
+                        els[0].click()
+                    except Exception:
+                        driver.execute_script("arguments[0].click();", els[0])
+                    time.sleep(2)
+                    break
+            except Exception:
+                pass
+
+        # 7) 校验是否切换成功
+        nav_text = ""
+        try:
+            nav_addr = driver.find_element(By.ID, "glow-ingress-line2")
+            nav_text = (nav_addr.text or "").strip()
+        except Exception:
+            pass
+
+        if zipcode not in nav_text:
+            raise Exception(f"zipcode not applied: {zipcode}, nav_text={nav_text}")
+
+        print(f"Zipcode switched to {zipcode} successfully")
+
     except Exception as exc:
         print(f"Zipcode switch failed for {zipcode}: {exc}")
-
-
+        raise
+        
 def find_asin_rank(
     driver: webdriver.Chrome,
     wait: WebDriverWait,
