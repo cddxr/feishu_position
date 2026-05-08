@@ -71,7 +71,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "lung detox for smokers"},
         ],
     },
-    "B0GJ4Z53JJ": {
+    "B0DJRD5LCB": {
         "name": "y",
         "zipcodes": ["90001"],
         "keywords": [
