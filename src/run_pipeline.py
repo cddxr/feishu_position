@@ -26,7 +26,7 @@ KEYWORD_REOPEN_RETRIES = 2
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     "B0F8HXNY5N": {
         "name": "default",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001"],
         "keywords": [
             {"keyword": "ryze mushroom hot cocoa"},
             {"keyword": "moonbrew"},
@@ -34,7 +34,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "sleep aid"},
         ],
     },
-    "B0G64PSMX4": {
+    "B0FQCBMFYQ": {
         "name": "default",
         "zipcodes": ["90001", "75001"],
         "keywords": [
@@ -69,6 +69,16 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "mullein"},
             {"keyword": "mullein leaf extract for lungs"},
             {"keyword": "lung detox for smokers"},
+        ],
+    },
+    "B0GJ4Z53JJ": {
+        "name": "y",
+        "zipcodes": ["90001"],
+        "keywords": [
+            {"keyword": "vitamin d drops"},
+            {"keyword": "liquid vitamind"},
+            {"keyword": "vitamin d3 k2"},
+            {"keyword": "d3 k2 vitamin 10000 iu"},
         ],
     },
         "B0FKN3ZTBJ": {
