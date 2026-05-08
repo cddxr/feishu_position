@@ -129,7 +129,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "ryze mushroom coffee for weight loss"},
         ],
     },
-    "BODWSDC52L": {
+    "B0DWSDC52L": {
         "name": "tx",
         "zipcodes": ["90001", "75001"],
         "keywords": [
