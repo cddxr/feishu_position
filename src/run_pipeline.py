@@ -22,6 +22,22 @@ RESULTS_PER_PAGE = 48
 SEARCH_RETRIES = 3
 KEYWORD_REOPEN_RETRIES = 2
 
+FEISHU_WEBHOOK_DEFAULTS = {
+    "lyj_group": "https://o9xilj84js.feishu.cn/base/workflow/webhook/event/TqLDajCZYw8Zyph0nyGcMH1anMH",
+    "ytx_group": "https://o9xilj84js.feishu.cn/base/workflow/webhook/event/VXZsa3nrIwrrnIhuCLSc2H7Dnee",
+    "default_group": "https://o9xilj84js.feishu.cn/base/workflow/webhook/event/OMqZaCHJ9wOjOGhGFwGcCOccnEd",
+}
+
+FEISHU_ACCOUNT_GROUPS = {
+    "lyj": "lyj_group",
+    "zlq": "lyj_group",
+    "lyw": "lyj_group",
+    "y": "ytx_group",
+    "tx": "ytx_group",
+    "hwy": "ytx_group",
+    "default": "default_group",
+}
+
 
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     "B0F8HXNY5N": {
@@ -45,57 +61,20 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "chike"},
         ],
     },
-    "B0FN3RJ53V": {
+    "B0DJRD5LCB__y": {
+        "asin": "B0DJRD5LCB",
         "name": "y",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001", "90015"],
         "keywords": [
-            {"keyword": "magnesium cream"},
-            {"keyword": "magnesium lotion"},
-            {"keyword": "magnesium cream for sleep"},
-            {"keyword": "magnesium lotion for sleep"},
-            {"keyword": "magnesium lotion for kids"},
-            {"keyword": "magnesium oil"},
-            {"keyword": "magnesium butter"},
-            {"keyword": "arnica cream"},
-            {"keyword": "restless legs syndrome relief"},
-            {"keyword": "Total Relief Magnesium Cream"},
-        ],
-    },
-    "B0F1Y8YV9R": {
-        "name": "y",
-        "zipcodes": ["90001", "75001"],
-        "keywords": [
-            {"keyword": "mullein drops for lungs"},
-            {"keyword": "mullein"},
-            {"keyword": "mullein leaf extract for lungs"},
-            {"keyword": "lung detox for smokers"},
-        ],
-    },
-        "B0FKN3ZTBJ": {
-        "name": "zlq",
-        "zipcodes": ["90015"],
-        "keywords": [
-            {"keyword": "electrolytes"},
-            {"keyword": "lmnt electrolytes"},
-            {"keyword": "lmnt"},
-            {"keyword": "electrolytes powder packets"},
-            {"keyword": "lmnt electrolyte powder packets"},
-        ],
-    },
-    "B0FVLNKFJL": {
-        "name": "zlq",
-        "zipcodes": ["90015"],
-        "keywords": [
-            {"keyword": "electrolytes"},
-            {"keyword": "lmnt electrolytes"},
-            {"keyword": "lmnt"},
-            {"keyword": "electrolytes powder packets"},
-            {"keyword": "lmnt electrolyte powder packets"},
+            {"keyword": "vitamin d drops"},
+            {"keyword": "liquid vitamin d"},
+            {"keyword": "vitamin d3 k2"},
+            {"keyword": "d3 k2 vitamin 10000 iu"},
         ],
     },
     "B0DJVWJHHJ": {
         "name": "hwy",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001"],
         "keywords": [
             {"keyword": "cat dental care"},
             {"keyword": "cat teeth cleaning"},
@@ -105,7 +84,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DDCJFFBM": {
         "name": "tx",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001", "75001", "78001", "10001"],
         "keywords": [
             {"keyword": "ryze mushroom coffee"},
             {"keyword": "mushroom coffee"},
@@ -113,7 +92,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DFBMVX7T": {
         "name": "tx",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001", "75001", "78001", "10001"],
         "keywords": [
             {"keyword": "mushroom coffee for weight loss"},
             {"keyword": "ryze mushroom coffee for weight loss"},
@@ -121,7 +100,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "BODWSDC52L": {
         "name": "tx",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001"],
         "keywords": [
             {"keyword": "face moisturizer"},
             {"keyword": "retinol serum for face"},
@@ -136,7 +115,6 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
         "keywords": [
             {"keyword": "lmnt electrolytes"},
             {"keyword": "lmnt"},
-            {"keyword": "relyte electrolyte mix"},
             {"keyword": "electrolytes"},
             {"keyword": "electrolytes powder packets"},
         ],
@@ -162,6 +140,54 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "electrolytes powder packets"},
             {"keyword": "hydration packets"},
             {"keyword": "sugar free liquid iv"},
+        ],
+    },
+    "B0FKN3ZTBJ__zlq": {
+        "asin": "B0FKN3ZTBJ",
+        "name": "zlq",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "electrolytes"},
+            {"keyword": "lmnt electrolytes"},
+            {"keyword": "lmnt"},
+            {"keyword": "electrolytes powder packets"},
+            {"keyword": "lmnt electrolyte powder packets"},
+        ],
+    },
+    "B0FVLNKFJL": {
+        "name": "zlq",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "electrolytes"},
+            {"keyword": "lmnt electrolytes"},
+            {"keyword": "lmnt"},
+            {"keyword": "electrolytes powder packets"},
+            {"keyword": "lmnt electrolyte powder packets"},
+        ],
+    },
+    "B0DGPZ81BC__lyw": {
+        "asin": "B0DGPZ81BC",
+        "name": "lyw",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "liquid iv"},
+            {"keyword": "liquid iv sugar free"},
+            {"keyword": "hydration packets"},
+            {"keyword": "electrolytes powder packets"},
+            {"keyword": "waterboy"},
+            {"keyword": "waterboy hydration packets"},
+        ],
+    },
+    "B0FKN3ZTBJ__lyw": {
+        "asin": "B0FKN3ZTBJ",
+        "name": "lyw",
+        "zipcodes": ["90015"],
+        "keywords": [
+            {"keyword": "electrolytes"},
+            {"keyword": "lmnt electrolytes"},
+            {"keyword": "lmnt"},
+            {"keyword": "electrolytes powder packets"},
+            {"keyword": "lmnt electrolyte powder packets"},
         ],
     },
 }
@@ -414,7 +440,8 @@ def collect_records(timezone_name: str) -> List[Dict]:
         driver.get("https://www.amazon.com")
         time.sleep(2)
 
-        for asin, meta in ASIN_KEYWORDS_MAP.items():
+        for asin_key, meta in ASIN_KEYWORDS_MAP.items():
+            asin = meta.get("asin", asin_key)
             account_name = meta.get("name", "default")
             zipcodes = meta.get("zipcodes", [])
             keywords = [x["keyword"] for x in meta.get("keywords", []) if x.get("keyword")]
@@ -505,21 +532,35 @@ def upsert_to_supabase(rows: List[Dict]) -> None:
     print(f"Supabase upsert ok, rows={len(rows)}")
 
 
+def get_feishu_webhook(account_name: str) -> Optional[str]:
+    group = FEISHU_ACCOUNT_GROUPS.get(account_name, "default_group")
+    env_name = f"FEISHU_WEBHOOK_{group.upper()}"
+    return (os.getenv(env_name) or FEISHU_WEBHOOK_DEFAULTS[group]).strip()
+
+
 def post_to_feishu_workflow(rows: List[Dict]) -> None:
-    webhook = os.getenv("FEISHU_WEBHOOK_URL")
-    if not webhook:
-        print("FEISHU_WEBHOOK_URL not set, skip webhook post.")
+    rows_by_webhook: Dict[str, List[Dict]] = {}
+    for row in rows:
+        webhook = get_feishu_webhook(row.get("account_name", "default"))
+        if not webhook:
+            continue
+        rows_by_webhook.setdefault(webhook, []).append(row)
+
+    if not rows_by_webhook:
+        print("No Feishu webhook configured, skip webhook post.")
         return
 
-    payload = {
-        "source": "github_actions",
-        "event": "amazon_rank_synced",
-        "row_count": len(rows),
-        "rows": rows,
-    }
-    resp = requests.post(webhook, json=payload, timeout=30)
-    resp.raise_for_status()
-    print("Feishu webhook post ok")
+    for webhook, webhook_rows in rows_by_webhook.items():
+        payload = {
+            "source": "github_actions",
+            "event": "amazon_rank_synced",
+            "row_count": len(webhook_rows),
+            "rows": webhook_rows,
+        }
+        resp = requests.post(webhook, json=payload, timeout=30)
+        resp.raise_for_status()
+        accounts = sorted({row.get("account_name", "default") for row in webhook_rows})
+        print(f"Feishu webhook post ok, accounts={accounts}, rows={len(webhook_rows)}")
 
 
 def main() -> None:
