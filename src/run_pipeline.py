@@ -449,6 +449,10 @@ def collect_records(timezone_name: str) -> List[Dict]:
             for zipcode in zipcodes:
                 change_zipcode(driver, wait, zipcode)
                 for keyword in keywords:
+                    print(
+                        f"Processing account={account_name} asin={asin} zipcode={zipcode} keyword={keyword}",
+                        flush=True,
+                    )
                     rank_result = {
                         "page": None,
                         "rank": None,
