@@ -42,7 +42,7 @@ FEISHU_ACCOUNT_GROUPS = {
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     "B0F8HXNY5N": {
         "name": "default",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001", "75001", "10001", "90015"],
         "keywords": [
             {"keyword": "ryze mushroom hot cocoa"},
             {"keyword": "moonbrew"},
@@ -52,7 +52,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0G64PSMX4": {
         "name": "default",
-        "zipcodes": ["90001", "75001"],
+        "zipcodes": ["90001", "75001", "10001", "90015"],
         "keywords": [
             {"keyword": "javy protein coffee powder"},
             {"keyword": "protein coffee"},
@@ -74,7 +74,7 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     },
     "B0DJVWJHHJ": {
         "name": "hwy",
-        "zipcodes": ["90001"],
+        "zipcodes": ["90001", "90015"],
         "keywords": [
             {"keyword": "cat dental care"},
             {"keyword": "cat teeth cleaning"},
