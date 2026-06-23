@@ -207,11 +207,12 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
     )
     driver = webdriver.Chrome(options=options)
     driver.set_page_load_timeout(30)
+    driver.set_script_timeout(15)
     return driver
 
 
 def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) -> None:
-    def wait_page_ready(timeout: int = 20):
+    def wait_page_ready(timeout: int = 12):
         WebDriverWait(driver, timeout).until(
             lambda d: d.execute_script("return document.readyState") == "complete"
         )
@@ -238,11 +239,59 @@ def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) 
                 continue
         raise last_exc if last_exc else Exception("No clickable element found")
 
+    def try_ajax_change() -> bool:
+        if "amazon.com" not in (driver.current_url or ""):
+            driver.get("https://www.amazon.com/?ref_=nav_logo")
+            wait_page_ready()
+
+        script = """
+            const zipcode = arguments[0];
+            const done = arguments[arguments.length - 1];
+            const body = new URLSearchParams({
+                locationType: "LOCATION_INPUT",
+                zipCode: zipcode,
+                storeContext: "generic",
+                deviceType: "web",
+                pageType: "Gateway",
+                actionSource: "glow"
+            });
+            fetch("/gp/delivery/ajax/address-change.html", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "Accept": "application/json, text/javascript, */*; q=0.01",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body,
+                credentials: "include"
+            })
+                .then(async response => done({
+                    ok: response.ok,
+                    status: response.status,
+                    text: (await response.text()).slice(0, 300)
+                }))
+                .catch(error => done({ok: false, error: String(error)}));
+        """
+        result = driver.execute_async_script(script, zipcode)
+        text = (result.get("text") or "").lower()
+        return bool(result.get("ok")) and "captcha" not in text and "csrf" not in text
+
+    start = time.time()
     try:
+        try:
+            if try_ajax_change():
+                print(
+                    f"Zipcode switched to {zipcode} via ajax in {time.time() - start:.1f}s",
+                    flush=True,
+                )
+                return
+        except Exception as exc:
+            print(f"Fast zipcode ajax failed for {zipcode}: {exc}", flush=True)
+
         # 1) 强制回首页，避免停留在搜索页/异常页
         driver.get("https://www.amazon.com/?ref_=nav_logo")
         wait_page_ready()
-        time.sleep(2)
+        time.sleep(1)
 
         # 2) 先处理可能的 cookie / continue 弹窗（有则点，没有就跳过）
         optional_buttons = [
@@ -273,7 +322,7 @@ def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) 
             (By.XPATH, '//span[@id="glow-ingress-line1"]/ancestor::*[@id="nav-global-location-popover-link" or @id="glow-ingress-block"]'),
         ]
         safe_click_any(location_locators, timeout=15)
-        time.sleep(2)
+        time.sleep(1)
 
         # 4) 等邮编输入框出现
         zip_input = WebDriverWait(driver, 15).until(
@@ -295,7 +344,7 @@ def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) 
             (By.XPATH, '//input[contains(@id,"GLUXZipUpdate")]'),
         ]
         safe_click_any(apply_locators, timeout=10)
-        time.sleep(3)
+        time.sleep(1.5)
 
         # 6) Done / Continue / Confirm 按钮兜底
         done_locators = [
@@ -314,7 +363,7 @@ def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) 
                         els[0].click()
                     except Exception:
                         driver.execute_script("arguments[0].click();", els[0])
-                    time.sleep(2)
+                    time.sleep(1)
                     break
             except Exception:
                 pass
@@ -330,7 +379,10 @@ def change_zipcode(driver: webdriver.Chrome, wait: WebDriverWait, zipcode: str) 
         if zipcode not in nav_text:
             raise Exception(f"zipcode not applied: {zipcode}, nav_text={nav_text}")
 
-        print(f"Zipcode switched to {zipcode} successfully")
+        print(
+            f"Zipcode switched to {zipcode} via ui in {time.time() - start:.1f}s",
+            flush=True,
+        )
 
     except Exception as exc:
         print(f"Zipcode switch failed for {zipcode}: {exc}")
@@ -423,18 +475,57 @@ def collect_records(timezone_name: str) -> List[Dict]:
     rows: List[Dict] = []
     driver = build_driver(headless=True)
     wait = WebDriverWait(driver, WAIT_TIME)
+    active_zipcode: Optional[str] = None
 
-    def reopen_session(current_zipcode: str) -> None:
-        nonlocal driver, wait
+    def failure_result() -> Dict[str, Optional[int]]:
+        return {
+            "page": None,
+            "rank": None,
+            "position": None,
+            "type": "执行失败",
+        }
+
+    def append_record(
+        asin: str,
+        account_name: str,
+        zipcode: str,
+        keyword: str,
+        rank_result: Dict[str, Optional[int]],
+    ) -> None:
+        now = datetime.now(pytz.timezone(timezone_name))
+        rows.append(
+            {
+                "asin": asin,
+                "account_name": account_name,
+                "zipcode": zipcode,
+                "keyword": keyword,
+                "page": rank_result["page"],
+                "rank": rank_result["rank"],
+                "position": rank_result["position"],
+                "type": rank_result["type"],
+                "captured_at": now.isoformat(),
+                "captured_date": now.strftime("%Y-%m-%d"),
+            }
+        )
+
+    def reopen_session(current_zipcode: str) -> bool:
+        nonlocal active_zipcode, driver, wait
+        active_zipcode = None
         try:
             driver.quit()
         except Exception:
             pass
-        driver = build_driver(headless=True)
-        wait = WebDriverWait(driver, WAIT_TIME)
-        driver.get("https://www.amazon.com")
-        time.sleep(2)
-        change_zipcode(driver, wait, current_zipcode)
+        try:
+            driver = build_driver(headless=True)
+            wait = WebDriverWait(driver, WAIT_TIME)
+            driver.get("https://www.amazon.com")
+            time.sleep(2)
+            change_zipcode(driver, wait, current_zipcode)
+            active_zipcode = current_zipcode
+            return True
+        except Exception as exc:
+            print(f"Reopen session failed for zipcode={current_zipcode}: {exc}", flush=True)
+            return False
 
     try:
         driver.get("https://www.amazon.com")
@@ -447,18 +538,40 @@ def collect_records(timezone_name: str) -> List[Dict]:
             keywords = [x["keyword"] for x in meta.get("keywords", []) if x.get("keyword")]
 
             for zipcode in zipcodes:
-                change_zipcode(driver, wait, zipcode)
+                zipcode_ready = False
+                try:
+                    if active_zipcode == zipcode:
+                        zipcode_ready = True
+                        print(f"Zipcode {zipcode} already active, skip switch", flush=True)
+                    else:
+                        change_zipcode(driver, wait, zipcode)
+                        active_zipcode = zipcode
+                    zipcode_ready = True
+                except Exception as exc:
+                    active_zipcode = None
+                    print(
+                        f"Zipcode setup failed account={account_name} asin={asin} "
+                        f"zipcode={zipcode}: {exc}",
+                        flush=True,
+                    )
+                    zipcode_ready = reopen_session(zipcode)
+
+                if not zipcode_ready:
+                    print(
+                        f"Skip zipcode after failed setup account={account_name} asin={asin} "
+                        f"zipcode={zipcode}; mark keywords as 执行失败",
+                        flush=True,
+                    )
+                    for keyword in keywords:
+                        append_record(asin, account_name, zipcode, keyword, failure_result())
+                    continue
+
                 for keyword in keywords:
                     print(
                         f"Processing account={account_name} asin={asin} zipcode={zipcode} keyword={keyword}",
                         flush=True,
                     )
-                    rank_result = {
-                        "page": None,
-                        "rank": None,
-                        "position": None,
-                        "type": "执行失败",
-                    }
+                    rank_result = failure_result()
 
                     for attempt in range(KEYWORD_REOPEN_RETRIES + 1):
                         try:
@@ -468,12 +581,7 @@ def collect_records(timezone_name: str) -> List[Dict]:
                                 f"find_asin_rank exception asin={asin} keyword={keyword} "
                                 f"attempt={attempt + 1}: {exc}"
                             )
-                            rank_result = {
-                                "page": None,
-                                "rank": None,
-                                "position": None,
-                                "type": "执行失败",
-                            }
+                            rank_result = failure_result()
 
                         if rank_result.get("type") != "执行失败":
                             break
@@ -483,23 +591,10 @@ def collect_records(timezone_name: str) -> List[Dict]:
                                 f"Retry with reopen asin={asin} keyword={keyword} "
                                 f"zipcode={zipcode} attempt={attempt + 2}"
                             )
-                            reopen_session(zipcode)
+                            if not reopen_session(zipcode):
+                                break
 
-                    now = datetime.now(pytz.timezone(timezone_name))
-                    rows.append(
-                        {
-                            "asin": asin,
-                            "account_name": account_name,
-                            "zipcode": zipcode,
-                            "keyword": keyword,
-                            "page": rank_result["page"],
-                            "rank": rank_result["rank"],
-                            "position": rank_result["position"],
-                            "type": rank_result["type"],
-                            "captured_at": now.isoformat(),
-                            "captured_date": now.strftime("%Y-%m-%d"),
-                        }
-                    )
+                    append_record(asin, account_name, zipcode, keyword, rank_result)
                     time.sleep(1)
     finally:
         driver.quit()
