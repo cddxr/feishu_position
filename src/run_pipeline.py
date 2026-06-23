@@ -20,7 +20,7 @@ MAX_PAGES = 8
 WAIT_TIME = 10
 RESULTS_PER_PAGE = 48
 SEARCH_RETRIES = 3
-KEYWORD_REOPEN_RETRIES = 2
+KEYWORD_REOPEN_RETRIES = 0
 
 FEISHU_WEBHOOK_DEFAULTS = {
     "lyj_group": "https://o9xilj84js.feishu.cn/base/workflow/webhook/event/TqLDajCZYw8Zyph0nyGcMH1anMH",
