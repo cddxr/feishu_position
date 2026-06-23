@@ -17,10 +17,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 MAX_PAGES = 8
-WAIT_TIME = 10
+WAIT_TIME = 15
 RESULTS_PER_PAGE = 48
-SEARCH_RETRIES = 3
-KEYWORD_REOPEN_RETRIES = 0
+SEARCH_RETRIES = 5
+KEYWORD_REOPEN_RETRIES = 3
 
 FEISHU_WEBHOOK_DEFAULTS = {
     "lyj_group": "https://o9xilj84js.feishu.cn/base/workflow/webhook/event/TqLDajCZYw8Zyph0nyGcMH1anMH",
@@ -409,9 +409,9 @@ def find_asin_rank(
 
     if not loaded:
         return {
-            "page": None,
-            "rank": None,
-            "position": None,
+            "page": 0,
+            "rank": 0,
+            "position": 0,
             "type": "执行失败",
         }
 
@@ -446,8 +446,8 @@ def find_asin_rank(
             if item_asin == asin:
                 return {
                     "page": page,
-                    "rank": current_rank_page,
-                    "position": current_rank_total,
+                    "rank": current_rank_page or 0,
+                    "position": current_rank_total or 0,
                     "type": item_type,
                 }
 
@@ -464,9 +464,9 @@ def find_asin_rank(
         time.sleep(2)
 
     return {
-        "page": None,
-        "rank": None,
-        "position": None,
+        "page": 0,
+        "rank": 0,
+        "position": 0,
         "type": "N/A",
     }
 
@@ -479,9 +479,9 @@ def collect_records(timezone_name: str) -> List[Dict]:
 
     def failure_result() -> Dict[str, Optional[int]]:
         return {
-            "page": None,
-            "rank": None,
-            "position": None,
+            "page": 0,
+            "rank": 0,
+            "position": 0,
             "type": "执行失败",
         }
 
