@@ -19,8 +19,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 MAX_PAGES = 8
 WAIT_TIME = 15
 RESULTS_PER_PAGE = 48
-SEARCH_RETRIES = 5
-KEYWORD_REOPEN_RETRIES = 3
+SEARCH_RETRIES = 3
+KEYWORD_REOPEN_RETRIES = 1
 
 FEISHU_WEBHOOK_DEFAULTS = {
     "lyj_group": "https://o9xilj84js.feishu.cn/base/workflow/webhook/event/TqLDajCZYw8Zyph0nyGcMH1anMH",
@@ -195,19 +195,60 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
 
 def build_driver(headless: bool = True) -> webdriver.Chrome:
     options = Options()
+    options.page_load_strategy = "eager"
     if headless:
         options.add_argument("--headless=new")
+    options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--disable-notifications")
+    options.add_argument("--disable-popup-blocking")
+    options.add_argument("--no-default-browser-check")
+    options.add_argument("--no-first-run")
+    options.add_argument("--lang=en-US,en")
     options.add_argument("--window-size=1920,1080")
     options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     )
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
+    options.add_experimental_option(
+        "prefs",
+        {
+            "intl.accept_languages": "en-US,en",
+            "profile.default_content_setting_values.notifications": 2,
+        },
+    )
     driver = webdriver.Chrome(options=options)
     driver.set_page_load_timeout(30)
     driver.set_script_timeout(15)
+    driver.execute_cdp_cmd("Network.enable", {})
+    driver.execute_cdp_cmd(
+        "Network.setExtraHTTPHeaders",
+        {
+            "headers": {
+                "Accept-Language": "en-US,en;q=0.9",
+                "DNT": "1",
+                "Upgrade-Insecure-Requests": "1",
+            }
+        },
+    )
+    driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-US"})
+    driver.execute_cdp_cmd(
+        "Page.addScriptToEvaluateOnNewDocument",
+        {
+            "source": """
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+                window.chrome = window.chrome || {runtime: {}};
+            """
+        },
+    )
     return driver
 
 
@@ -396,15 +437,39 @@ def find_asin_rank(
     max_pages: int = MAX_PAGES,
     results_per_page: int = RESULTS_PER_PAGE,
 ) -> Dict[str, Optional[int]]:
-    query_url = f"https://www.amazon.com/s?k={quote_plus(keyword)}"
+    def page_diagnostic() -> str:
+        title = ""
+        current_url = ""
+        source = ""
+        try:
+            title = driver.title
+            current_url = driver.current_url
+            source = driver.page_source.lower()
+        except Exception:
+            pass
+        flags = []
+        if "captcha" in source or "robot check" in source or "/errors/validatecaptcha" in current_url:
+            flags.append("captcha_or_robot_check")
+        if "sorry" in title.lower() or "sorry" in source[:1000]:
+            flags.append("sorry_page")
+        return f"title={title!r} url={current_url!r} flags={flags}"
+
+    query_url = f"https://www.amazon.com/s?k={quote_plus(keyword)}&ref=nb_sb_noss"
     loaded = False
-    for _ in range(SEARCH_RETRIES):
+    last_diag = ""
+    for attempt in range(SEARCH_RETRIES):
         try:
             driver.get(query_url)
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot")))
             loaded = True
             break
         except (TimeoutException, WebDriverException):
+            last_diag = page_diagnostic()
+            print(
+                f"Search page load failed asin={asin} keyword={keyword} "
+                f"attempt={attempt + 1}/{SEARCH_RETRIES}: {last_diag}",
+                flush=True,
+            )
             time.sleep(2)
 
     if not loaded:
