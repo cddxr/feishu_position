@@ -50,18 +50,18 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
             {"keyword": "sleep aid"},
         ],
     },
-    "B0G64PSMX4": {
-        "name": "default",
-        "zipcodes": ["90001", "75001", "10001", "90015"],
-        "keywords": [
-            {"keyword": "javy protein coffee powder"},
-            {"keyword": "protein coffee"},
-            {"keyword": "chike high protein coffee"},
-            {"keyword": "javvy"},
-            {"keyword": "chike"},
-        ],
-    },
-    "B0DJRD5LCB__y": {
+    # "B0G64PSMX4": {
+    #     "name": "default",
+    #     "zipcodes": ["90001", "75001", "10001", "90015"],
+    #     "keywords": [
+    #         {"keyword": "javy protein coffee powder"},
+    #         {"keyword": "protein coffee"},
+    #         {"keyword": "chike high protein coffee"},
+    #         {"keyword": "javvy"},
+    #         {"keyword": "chike"},
+    #     ],
+    # },
+    "B0DJRD5LCB": {
         "asin": "B0DJRD5LCB",
         "name": "y",
         "zipcodes": ["90001", "90015"],
