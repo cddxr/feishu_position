@@ -19,8 +19,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 MAX_PAGES = 8
 WAIT_TIME = 15
 RESULTS_PER_PAGE = 48
-SEARCH_RETRIES = 3
-KEYWORD_REOPEN_RETRIES = 1
+SEARCH_RETRIES = 5
+KEYWORD_REOPEN_RETRIES = 2
+RETRY_TYPE = "__retry__"
 
 FEISHU_WEBHOOK_DEFAULTS = {
     "lyj_group": "https://o9xilj84js.feishu.cn/base/workflow/webhook/event/TqLDajCZYw8Zyph0nyGcMH1anMH",
@@ -477,7 +478,7 @@ def find_asin_rank(
             "page": 0,
             "rank": 0,
             "position": 0,
-            "type": "执行失败",
+            "type": RETRY_TYPE,
         }
 
     page = 1
@@ -547,7 +548,15 @@ def collect_records(timezone_name: str) -> List[Dict]:
             "page": 0,
             "rank": 0,
             "position": 0,
-            "type": "执行失败",
+            "type": RETRY_TYPE,
+        }
+
+    def not_found_result() -> Dict[str, Optional[int]]:
+        return {
+            "page": 0,
+            "rank": 0,
+            "position": 0,
+            "type": "N/A",
         }
 
     def append_record(
@@ -624,11 +633,11 @@ def collect_records(timezone_name: str) -> List[Dict]:
                 if not zipcode_ready:
                     print(
                         f"Skip zipcode after failed setup account={account_name} asin={asin} "
-                        f"zipcode={zipcode}; mark keywords as 执行失败",
+                        f"zipcode={zipcode}; mark keywords as N/A",
                         flush=True,
                     )
                     for keyword in keywords:
-                        append_record(asin, account_name, zipcode, keyword, failure_result())
+                        append_record(asin, account_name, zipcode, keyword, not_found_result())
                     continue
 
                 for keyword in keywords:
@@ -648,7 +657,7 @@ def collect_records(timezone_name: str) -> List[Dict]:
                             )
                             rank_result = failure_result()
 
-                        if rank_result.get("type") != "执行失败":
+                        if rank_result.get("type") != RETRY_TYPE:
                             break
 
                         if attempt < KEYWORD_REOPEN_RETRIES:
@@ -658,6 +667,14 @@ def collect_records(timezone_name: str) -> List[Dict]:
                             )
                             if not reopen_session(zipcode):
                                 break
+
+                    if rank_result.get("type") == RETRY_TYPE:
+                        print(
+                            f"Search never stabilized account={account_name} asin={asin} "
+                            f"zipcode={zipcode} keyword={keyword}; write N/A",
+                            flush=True,
+                        )
+                        rank_result = not_found_result()
 
                     append_record(asin, account_name, zipcode, keyword, rank_result)
                     time.sleep(1)
