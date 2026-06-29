@@ -37,5 +37,6 @@ jobs:
           FEISHU_WEBHOOK_LYJ_GROUP: ${{ secrets.FEISHU_WEBHOOK_LYJ_GROUP }}
           FEISHU_WEBHOOK_YTX_GROUP: ${{ secrets.FEISHU_WEBHOOK_YTX_GROUP }}
           FEISHU_WEBHOOK_DEFAULT_GROUP: ${{ secrets.FEISHU_WEBHOOK_DEFAULT_GROUP }}
+          AMAZON_PROXY_URL: ${{ secrets.AMAZON_PROXY_URL }}
           TIMEZONE: ${{ secrets.TIMEZONE }}
         run: python src/run_pipeline.py
