@@ -11,9 +11,12 @@ from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.driver_cache import DriverCacheManager
 
 
 MAX_PAGES = 8
@@ -195,6 +198,12 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
 
 
 def build_driver(headless: bool = True) -> webdriver.Chrome:
+    runner_temp = os.environ.get("RUNNER_TEMP") or os.environ.get("TEMP") or os.getcwd()
+    chrome_runtime_dir = os.path.join(runner_temp, "chrome-runtime", str(os.getpid()))
+    wdm_cache_dir = os.environ.get("WDM_CACHE_DIR") or os.path.join(runner_temp, "wdm-cache")
+    os.makedirs(chrome_runtime_dir, exist_ok=True)
+    os.makedirs(wdm_cache_dir, exist_ok=True)
+
     options = Options()
     options.page_load_strategy = "eager"
     if headless:
@@ -211,6 +220,8 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
     options.add_argument("--no-first-run")
     options.add_argument("--lang=en-US,en")
     options.add_argument("--window-size=1920,1080")
+    options.add_argument(f"--user-data-dir={chrome_runtime_dir}")
+    options.add_argument(f"--disk-cache-dir={os.path.join(chrome_runtime_dir, 'cache')}")
     options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -224,7 +235,10 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
             "profile.default_content_setting_values.notifications": 2,
         },
     )
-    driver = webdriver.Chrome(options=options)
+    service = Service(
+        ChromeDriverManager(cache_manager=DriverCacheManager(root_dir=wdm_cache_dir)).install()
+    )
+    driver = webdriver.Chrome(service=service, options=options)
     driver.set_page_load_timeout(30)
     driver.set_script_timeout(15)
     driver.execute_cdp_cmd("Network.enable", {})

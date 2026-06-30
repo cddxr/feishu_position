@@ -13,6 +13,9 @@ jobs:
     env:
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
+      TEMP: D:\actions-runner\_work\_temp
+      TMP: D:\actions-runner\_work\_temp
+      WDM_CACHE_DIR: D:\actions-runner\_work\_temp\wdm-cache
 
     steps:
       - name: Checkout
