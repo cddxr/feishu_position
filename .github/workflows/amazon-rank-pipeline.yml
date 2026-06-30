@@ -8,7 +8,7 @@ on:
 
 jobs:
   run:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 360
 
     steps:
@@ -19,9 +19,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
 
       - name: Install dependencies
         run: |
@@ -37,6 +34,5 @@ jobs:
           FEISHU_WEBHOOK_LYJ_GROUP: ${{ secrets.FEISHU_WEBHOOK_LYJ_GROUP }}
           FEISHU_WEBHOOK_YTX_GROUP: ${{ secrets.FEISHU_WEBHOOK_YTX_GROUP }}
           FEISHU_WEBHOOK_DEFAULT_GROUP: ${{ secrets.FEISHU_WEBHOOK_DEFAULT_GROUP }}
-          AMAZON_PROXY_URL: ${{ secrets.AMAZON_PROXY_URL }}
           TIMEZONE: ${{ secrets.TIMEZONE }}
         run: python src/run_pipeline.py

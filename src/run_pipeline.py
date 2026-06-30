@@ -40,14 +40,6 @@ FEISHU_ACCOUNT_GROUPS = {
 }
 
 
-def mask_proxy_url(proxy_url: str) -> str:
-    if "@" not in proxy_url:
-        return proxy_url
-    prefix, host_part = proxy_url.rsplit("@", 1)
-    scheme = prefix.split("://", 1)[0] if "://" in prefix else "proxy"
-    return f"{scheme}://***@{host_part}"
-
-
 ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
     "B0F8HXNY5N": {
         "name": "default",
@@ -203,7 +195,6 @@ ASIN_KEYWORDS_MAP: Dict[str, Dict] = {
 
 
 def build_driver(headless: bool = True) -> webdriver.Chrome:
-    proxy_url = os.getenv("AMAZON_PROXY_URL", "").strip()
     options = Options()
     options.page_load_strategy = "eager"
     if headless:
@@ -233,23 +224,7 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
             "profile.default_content_setting_values.notifications": 2,
         },
     )
-    if proxy_url:
-        from seleniumwire import webdriver as seleniumwire_webdriver
-
-        seleniumwire_options = {
-            "proxy": {
-                "http": proxy_url,
-                "https": proxy_url,
-            },
-            "verify_ssl": False,
-        }
-        driver = seleniumwire_webdriver.Chrome(
-            options=options,
-            seleniumwire_options=seleniumwire_options,
-        )
-        print(f"Chrome proxy enabled: {mask_proxy_url(proxy_url)}", flush=True)
-    else:
-        driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(options=options)
     driver.set_page_load_timeout(30)
     driver.set_script_timeout(15)
     driver.execute_cdp_cmd("Network.enable", {})
