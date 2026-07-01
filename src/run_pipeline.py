@@ -22,7 +22,7 @@ from webdriver_manager.core.driver_cache import DriverCacheManager
 MAX_PAGES = 8
 WAIT_TIME = 15
 RESULTS_PER_PAGE = 48
-SEARCH_RETRIES = 5
+SEARCH_RETRIES = 8
 KEYWORD_REOPEN_RETRIES = 2
 RETRY_TYPE = "__retry__"
 
